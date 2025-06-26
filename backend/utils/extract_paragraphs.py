@@ -1,12 +1,13 @@
 import fitz  # PyMuPDF
 
-def extract_paragraphs_from_pdf(pdf_path):
-    doc = fitz.open(pdf_path)
+def extract_paragraphs_from_pdf(file_obj):
+    file_obj.seek(0)  # 🔁 Reset stream to beginning
+    doc = fitz.open(stream=file_obj.read(), filetype="pdf")
     all_lines = []
 
     for page in doc:
         lines = page.get_text("text").split("\n")
-        all_lines.extend(lines + ["<PAGEBREAK>"])  # to track logical breaks
+        all_lines.extend(lines + ["<PAGEBREAK>"])
 
     paragraphs = []
     current_para = []
@@ -15,10 +16,9 @@ def extract_paragraphs_from_pdf(pdf_path):
         stripped = line.strip()
         if stripped == "" or stripped == "<PAGEBREAK>":
             if current_para and current_para[-1] != "":
-                current_para.append("")  # track blank line
+                current_para.append("")
         else:
             if current_para and current_para[-1] == "":
-                # if a blank line just ended, start new paragraph
                 paragraphs.append(" ".join(current_para[:-1]))
                 current_para = [stripped]
             else:

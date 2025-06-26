@@ -226,31 +226,32 @@ if uploaded_file and st.session_state["selected_task"]:
         from backend.nlp.keywords import extract_keywords
         from backend.utils.pdf_utils import generate_keyword_pdf
         from backend.utils.extract_paragraphs import extract_paragraphs_from_pdf
-        
-        # Get the PDF file from uploader
-        uploaded = uploaded_file
 
-        if uploaded:
+        if uploaded_file:
             with st.spinner("📄 Parsing document and identifying paragraphs..."):
-                paragraphs = extract_paragraphs_from_pdf(uploaded)
+                # In-memory file object → passed directly to PyMuPDF
+                paragraphs = extract_paragraphs_from_pdf(uploaded_file)
 
             paragraphs_with_keywords = []
 
             st.subheader("🧾 Paragraphs and Their Keywords")
             for i, para in enumerate(paragraphs):
-                if not para.strip():
-                    continue
+                if not para.strip() or len(para.split()) < 5:
+                    continue  # Skip empty or too-short paragraphs
+
                 keywords = extract_keywords(para)
                 paragraphs_with_keywords.append((para, keywords))
 
                 st.markdown(f"### 📄 Paragraph {i + 1}")
                 st.markdown(para)
-                st.markdown(f"🔑 **Keywords**: {', '.join(keywords)}")
+                st.markdown(f"🔑 **Keywords**: `{', '.join(keywords)}`")
                 st.markdown("---")
 
+            # PDF Output
             with st.spinner("📥 Generating customized PDF..."):
                 from tempfile import NamedTemporaryFile
-                pdf_path = generate_keyword_pdf(paragraphs_with_keywords)
+                temp_pdf = NamedTemporaryFile(delete=False, suffix=".pdf")
+                pdf_path = generate_keyword_pdf(paragraphs_with_keywords, output_path=temp_pdf.name)
 
             with open(pdf_path, "rb") as f:
                 st.download_button(
@@ -259,6 +260,7 @@ if uploaded_file and st.session_state["selected_task"]:
                     file_name="keywords_paragraphs.pdf",
                     mime="application/pdf"
                 )
+
 
     elif task == "wiki":
         st.info("Looking up keyword explanations...")
