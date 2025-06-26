@@ -6,7 +6,7 @@ from backend.utils.highlight_query import highlight_query
 from backend.rag.generate_answer_gemini import generate_answer_gemini
 
 st.set_page_config(page_title="Ask EDX Clone", layout="wide")
-st.title("📄 Ask EDX Clone – Document Search + RAG")
+st.title("📄 QueryBridge – Document Search + RAG")
 
 uploaded_files = st.file_uploader("Upload document(s)", type=["txt", "pdf", "docx"], accept_multiple_files=True)
 query = st.text_input("🔍 Ask a question about your documents")
