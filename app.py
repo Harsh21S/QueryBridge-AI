@@ -1,6 +1,5 @@
 import streamlit as st
 import os
-from backend.nlp.extract_topics import extract_topics
 from backend.nlp.topic_modeling import enhance_sections_by_topic, extract_section_keywords
 from backend.document_parser import parse_file, chunk_text
 from backend.embedding import get_embeddings, embed_query
