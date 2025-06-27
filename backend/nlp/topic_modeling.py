@@ -3,11 +3,21 @@ from keybert import KeyBERT
 from collections import defaultdict
 from backend.rag.generate_answer_gemini import generate_answer_gemini
 from sentence_transformers import SentenceTransformer, util
+import nltk
 from nltk.corpus import stopwords
 import numpy as np
+import streamlit as st
 
 # Text cleaning function
-stop_words = set(stopwords.words("english"))
+@st.cache_resource
+def get_stopwords():
+    try:
+        nltk.data.find("corpora/stopwords")
+    except LookupError:
+        nltk.download("stopwords")
+    return set(stopwords.words("english"))
+
+stop_words = get_stopwords()
 custom_stopwords = stop_words.union({"bookmyshow", "username", "email", "event", "account"})
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
