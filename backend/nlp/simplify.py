@@ -4,8 +4,17 @@ import torch
 from transformers import pipeline
 from sentence_transformers import SentenceTransformer, util
 import textstat
+import streamlit as st
 
-nltk.download('punkt')
+@st.cache_resource
+def ensure_nltk_data():
+    try:
+        nltk.data.find("tokenizers/punkt")
+    except LookupError:
+        nltk.download("punkt")
+    return True
+
+ensure_nltk_data()
 
 
 class DocumentSimplifier:

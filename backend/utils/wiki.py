@@ -4,9 +4,23 @@ import yake
 import wikipedia
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-import nltk
-nltk.download("punkt")
-nltk.download("stopwords")
+import streamlit as st
+
+@st.cache_resource
+def ensure_nltk_data():
+    import nltk
+    try:
+        nltk.data.find("tokenizers/punkt")
+    except LookupError:
+        nltk.download("punkt")
+    try:
+        nltk.data.find("corpora/stopwords")
+    except LookupError:
+        nltk.download("stopwords")
+    return True
+
+ensure_nltk_data()
+
 
 
 def extract_unique_keywords(paragraphs_with_keywords):
