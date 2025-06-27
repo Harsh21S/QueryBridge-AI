@@ -103,7 +103,7 @@ if query:
             st.session_state["selected_task"] = "bullets"
         if st.button("✨ Highlight", key="highlight_btn"):
             st.session_state["selected_task"] = "highlight"
-
+        
 # --- Document Search + RAG ---
 if uploaded_file and query:
     if "doc_text" in st.session_state:
@@ -260,6 +260,33 @@ if uploaded_file and st.session_state["selected_task"]:
                     file_name="keywords_paragraphs.pdf",
                     mime="application/pdf"
                 )
+
+    
+    elif task == "wiki":
+        st.info("🔎 Looking up keyword explanations from Wikipedia...")
+
+        from backend.utils.wiki import lookup_keywords_explanation
+        from backend.utils.extract_paragraphs import extract_paragraphs_from_pdf
+        from backend.nlp.keywords import extract_keywords
+
+        with st.spinner("📄 Extracting paragraphs and keywords..."):
+            paragraphs = extract_paragraphs_from_pdf(uploaded_file)
+
+            paragraphs_with_keywords = []
+            for para in paragraphs:
+                if not para.strip():
+                    continue
+                keywords = extract_keywords(para)
+                paragraphs_with_keywords.append((para, keywords))
+
+        with st.spinner("🌐 Fetching definitions from Wikipedia..."):
+            keyword_info = lookup_keywords_explanation(paragraphs_with_keywords)
+
+        st.subheader("📖 Wikipedia Definitions")
+        for keyword, explanation in keyword_info.items():
+            st.markdown(f"### 🔑 {keyword.title()}")
+            st.markdown(explanation)
+            st.markdown("---")
 
 
     elif task == "wiki":
