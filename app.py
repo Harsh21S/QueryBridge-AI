@@ -8,11 +8,10 @@ from backend.utils.highlight_query import highlight_query
 from backend.rag.generate_answer_gemini import generate_answer_gemini
 
 
-# Session states
 if "selected_task" not in st.session_state:
     st.session_state["selected_task"] = None
 
-st.set_page_config(page_title="Ask EDX++ Analyzer", layout="wide")
+st.set_page_config(page_title="Ask QueryBridge", layout="wide")
 st.markdown("""
     <style>
     .task-icon-button {
@@ -33,7 +32,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🧠 Ask EDX++ – Smart PDF Analyzer")
+st.title("QueryBridge – Smart PDF Analyzer")
 
 # --- PDF Upload ---
 st.subheader("📄 Upload Your PDF")
@@ -105,6 +104,8 @@ if query:
         
 # --- Document Search + RAG ---
 if uploaded_file and query:
+
+    # --- Query Search ---
     if "doc_text" in st.session_state:
         all_chunks = chunk_text(st.session_state["doc_text"])
         doc_embeddings = get_embeddings(all_chunks)
@@ -124,6 +125,7 @@ if uploaded_file and query:
         st.subheader("💡 RAG-style Answer (Generated with Gemini)")
         top_chunks = [all_chunks[r['corpus_id']] for r in results]
 
+        # --- Generate with Gemini ---
         if st.button("🧠 Generate Answer with Gemini"):
             with st.spinner("🔍 Generating answer using Gemini..."):
                 answer = generate_answer_gemini(query, top_chunks)
@@ -136,6 +138,7 @@ if uploaded_file and st.session_state["selected_task"]:
     task = st.session_state["selected_task"]
     st.subheader(f"🔍 Performing Task: {task.title()}")
 
+    # --- Topic Handler ---
     if task == "topic":
             st.info("Running topic detection with BERTopic...")
             section_topics = extract_section_keywords(st.session_state["doc_text"])
@@ -158,6 +161,7 @@ if uploaded_file and st.session_state["selected_task"]:
                 mime="application/pdf"
             )
 
+            # --- Topic Enchancement ---
             if st.button("✨ Enhance Sections"):
                 with st.spinner("Combining and enhancing topic-based sections..."):
                     enhanced_sections = enhance_sections_by_topic(section_topics)
@@ -165,7 +169,6 @@ if uploaded_file and st.session_state["selected_task"]:
                         st.markdown(f"### 🧠 {topic}")
                         st.markdown(summary)
 
-                # Generate HTML after spinner ends
                 enhanced_html = "<h2>🧠 Enhanced Summaries</h2>"
                 for topic, summary in enhanced_sections.items():
                     enhanced_html += f"<h3>{topic}</h3><p>{summary}</p>"
@@ -180,8 +183,7 @@ if uploaded_file and st.session_state["selected_task"]:
                 )
 
 
-
-
+    # --- Summary ---
     elif task == "summary":
         st.info("Generating summary using Hugging Face BART pipeline...")
         length = st.radio("Select summary length:", ["Short", "Medium", "Long"], index=1, horizontal=True)
@@ -218,7 +220,7 @@ if uploaded_file and st.session_state["selected_task"]:
         st.markdown(f"**🔎 Semantic Similarity with Original:** `{similarity:.2f}`")
         st.markdown(f"**📖 Flesch Reading Ease Score:** `{readability:.2f}`")
 
-
+    # --- Keywords Finder ---
     elif task == "keywords":
         st.info("Extracting paragraphs and keywords...")
 
@@ -246,7 +248,6 @@ if uploaded_file and st.session_state["selected_task"]:
                 st.markdown(f"🔑 **Keywords**: `{', '.join(keywords)}`")
                 st.markdown("---")
 
-            # PDF Output
             with st.spinner("📥 Generating customized PDF..."):
                 from tempfile import NamedTemporaryFile
                 temp_pdf = NamedTemporaryFile(delete=False, suffix=".pdf")
@@ -260,7 +261,7 @@ if uploaded_file and st.session_state["selected_task"]:
                     mime="application/pdf"
                 )
 
-    
+    # --- Keyword Search Info ---
     elif task == "wiki":
         st.info("🔎 Looking up keyword explanations from Wikipedia...")
 
@@ -286,11 +287,6 @@ if uploaded_file and st.session_state["selected_task"]:
             st.markdown(f"### 🔑 {keyword.title()}")
             st.markdown(explanation)
             st.markdown("---")
-
-
-    elif task == "wiki":
-        st.info("Looking up keyword explanations...")
-        st.write("[TODO] Wikipedia definitions here.")
 
     elif task == "bullets":
         st.info("Generating bullet summary...")
